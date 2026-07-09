@@ -1,0 +1,54 @@
+---
+description: Core standards for the FIFA Smart Assistant hackathon project
+alwaysApply: true
+---
+
+# FIFA Smart Assistant
+
+Professional hackathon project. Prioritize clean, maintainable code over excessive complexity.
+
+## Stack
+
+| Layer | Technologies |
+|-------|--------------|
+| Frontend | React, TypeScript, Vite, Tailwind CSS |
+| Backend | Node.js, Express, TypeScript |
+| Database | MongoDB |
+| AI | Google Gemini API |
+
+## Code Quality
+
+- Never generate placeholder or low-quality code.
+- Keep code modular and production-ready; use clean architecture and reusable components.
+- Write readable variable names. Add comments only where they improve understanding.
+- Do not create unnecessary files. Never modify multiple unrelated files at once.
+- Ask for confirmation before making large architectural changes.
+
+## React & TypeScript
+
+- Functional components only. Follow React and TypeScript best practices.
+- Use Tailwind CSS for styling. Keep components small and reusable.
+- Separate UI, business logic, and API calls.
+
+```typescript
+// ❌ BAD — API call inside a component
+function MatchList() {
+  const [matches, setMatches] = useState([]);
+  useEffect(() => { fetch('/api/matches').then(r => r.json()).then(setMatches); }, []);
+}
+
+// ✅ GOOD — logic in a hook/service, UI stays thin
+function MatchList() {
+  const { matches, isLoading } = useMatches();
+}
+```
+
+## Security
+
+- Never hardcode secrets or API keys. Use environment variables (e.g. `VITE_*` for frontend, server-side vars for backend).
+
+## Feature Workflow
+
+1. **Explain** the implementation plan before writing code.
+2. **Generate** only the files required for the current feature.
+3. **Wait** for approval before starting the next feature.
