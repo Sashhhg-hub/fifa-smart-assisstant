@@ -1,6 +1,9 @@
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/Button';
 
 export function Hero() {
+  const navigate = useNavigate();
+
   return (
     <section id="home" className="relative flex min-h-screen items-center overflow-hidden pt-20">
       {/* Animated gradient background */}
@@ -51,7 +54,7 @@ export function Hero() {
           </p>
 
           <div className="animate-fade-in-up animation-delay-300 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button variant="primary" className="min-w-[180px] px-8 py-3.5">
+            <Button variant="primary" className="min-w-[180px] px-8 py-3.5" onClick={() => navigate('/dashboard')}>
               Explore Stadium
             </Button>
             <Button variant="secondary" className="min-w-[180px] px-8 py-3.5">

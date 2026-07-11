@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/Button';
 
 const navLinks = [
@@ -10,6 +11,8 @@ const navLinks = [
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const navigate = useNavigate();
+
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -47,12 +50,12 @@ export function Navbar() {
         </ul>
 
         <div className="hidden md:block">
-          <Button variant="primary" className="px-5 py-2.5 text-sm">
+          <Button variant="primary" className="px-5 py-2.5 text-sm" onClick={() => navigate('/dashboard')}>
             Get Started
           </Button>
         </div>
 
-        <Button variant="primary" className="px-4 py-2 text-sm md:hidden">
+        <Button variant="primary" className="px-4 py-2 text-sm md:hidden" onClick={() => navigate('/dashboard')}>
           Get Started
         </Button>
       </nav>
