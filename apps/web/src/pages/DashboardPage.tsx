@@ -8,6 +8,7 @@ import { MatchHub } from '../components/dashboard/MatchHub';
 import { FoodFinder } from '../components/dashboard/FoodFinder';
 import { EmergencyAssistance } from '../components/dashboard/EmergencyAssistance';
 import { AccessibilitySupport } from '../components/dashboard/AccessibilitySupport';
+import { LiveTranslation } from '../components/dashboard/LiveTranslation';
 
 export function DashboardPage() {
   const [activeTab, setActiveTab] = useState<SidebarTab>('dashboard');
@@ -30,6 +31,8 @@ export function DashboardPage() {
         return <EmergencyAssistance />;
       case 'accessibility':
         return <AccessibilitySupport />;
+      case 'translation':
+        return <LiveTranslation />;
       default:
         // Render a premium placeholder message for upcoming modules as they are highlighted
         return (
