@@ -7,6 +7,7 @@ import { StadiumNavigation } from '../components/dashboard/StadiumNavigation';
 import { MatchHub } from '../components/dashboard/MatchHub';
 import { FoodFinder } from '../components/dashboard/FoodFinder';
 import { EmergencyAssistance } from '../components/dashboard/EmergencyAssistance';
+import { AccessibilitySupport } from '../components/dashboard/AccessibilitySupport';
 
 export function DashboardPage() {
   const [activeTab, setActiveTab] = useState<SidebarTab>('dashboard');
@@ -27,6 +28,8 @@ export function DashboardPage() {
         return <FoodFinder onNavigateTab={setActiveTab} />;
       case 'emergency':
         return <EmergencyAssistance />;
+      case 'accessibility':
+        return <AccessibilitySupport />;
       default:
         // Render a premium placeholder message for upcoming modules as they are highlighted
         return (
