@@ -4,6 +4,7 @@ import { Header } from '../components/dashboard/Header';
 import { DashboardHome } from '../components/dashboard/DashboardHome';
 import { ChatConcierge } from '../components/dashboard/ChatConcierge';
 import { StadiumNavigation } from '../components/dashboard/StadiumNavigation';
+import { MatchHub } from '../components/dashboard/MatchHub';
 
 export function DashboardPage() {
   const [activeTab, setActiveTab] = useState<SidebarTab>('dashboard');
@@ -18,6 +19,8 @@ export function DashboardPage() {
         return <ChatConcierge />;
       case 'navigation':
         return <StadiumNavigation />;
+      case 'match':
+        return <MatchHub />;
       default:
         // Render a premium placeholder message for upcoming modules as they are highlighted
         return (
