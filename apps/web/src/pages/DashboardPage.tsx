@@ -5,6 +5,7 @@ import { DashboardHome } from '../components/dashboard/DashboardHome';
 import { ChatConcierge } from '../components/dashboard/ChatConcierge';
 import { StadiumNavigation } from '../components/dashboard/StadiumNavigation';
 import { MatchHub } from '../components/dashboard/MatchHub';
+import { FoodFinder } from '../components/dashboard/FoodFinder';
 
 export function DashboardPage() {
   const [activeTab, setActiveTab] = useState<SidebarTab>('dashboard');
@@ -21,6 +22,8 @@ export function DashboardPage() {
         return <StadiumNavigation />;
       case 'match':
         return <MatchHub />;
+      case 'food':
+        return <FoodFinder onNavigateTab={setActiveTab} />;
       default:
         // Render a premium placeholder message for upcoming modules as they are highlighted
         return (
