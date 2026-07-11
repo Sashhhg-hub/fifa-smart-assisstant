@@ -1,0 +1,141 @@
+import { useState, useCallback, useMemo } from 'react';
+import type { StadiumMapDestination } from '../components/dashboard/StadiumMap';
+
+export type NavDestination = StadiumMapDestination;
+
+export interface NavRoute {
+  destination: NavDestination;
+  walkingTime: string;
+  distance: string;
+  crowdLevel: 'Low' | 'Moderate' | 'Heavy';
+  accessibleRoute: boolean;
+  pathPoints: string; // SVG path string
+}
+
+export const USER_START = { x: 195, y: 380, name: 'Gate 4 (User Position)' }; // Starting coordinate near Gate 4
+
+// Mock database of locations in MetLife Stadium (Center of pitch is 300, 300)
+export const MOCK_STADIUM_DESTINATIONS: NavDestination[] = [
+  { id: 'seat-114', name: 'My Seat (Section 114)', type: 'seat', x: 260, y: 440, details: 'Sec 114, Row 12, Seat 4' },
+  { id: 'gate-4', name: 'Gate 4 Entrance', type: 'gate', x: 195, y: 380, details: 'North-West Gate' },
+  { id: 'gate-1', name: 'Gate 1 Entrance', type: 'gate', x: 405, y: 220, details: 'South-East Gate' },
+  { id: 'gate-2', name: 'Gate 2 Entrance', type: 'gate', x: 405, y: 380, details: 'North-East Gate' },
+  { id: 'gate-3', name: 'Gate 3 Entrance', type: 'gate', x: 195, y: 220, details: 'South-West Gate' },
+  { id: 'food-b', name: 'Concession Stand B (American Grill)', type: 'food', x: 230, y: 450, details: 'Wait Time: ~12m' },
+  { id: 'food-taco', name: 'Taco Hub', type: 'food', x: 300, y: 470, details: 'Wait Time: ~5m' },
+  { id: 'food-healthy', name: 'Healthy Eats stand', type: 'food', x: 370, y: 450, details: 'Wait Time: ~2m' },
+  { id: 'washroom-north', name: 'North Restrooms', type: 'washroom', x: 250, y: 460, details: 'Wait Time: ~1m (Accessible)' },
+  { id: 'washroom-east', name: 'East Restrooms', type: 'washroom', x: 410, y: 300, details: 'Wait Time: ~8m' },
+  { id: 'medical-firstaid', name: 'First Aid Clinic (Sec 118)', type: 'medical', x: 210, y: 430, details: 'Doctor & Nurse on duty' },
+  { id: 'exit-north', name: 'Emergency Exit North', type: 'exit', x: 300, y: 110, details: 'North Evacuation Tunnel' },
+  { id: 'exit-south', name: 'Emergency Exit South', type: 'exit', x: 300, y: 490, details: 'South Evacuation Tunnel' },
+];
+
+export function useStadiumNavigation() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [destinations] = useState<NavDestination[]>(MOCK_STADIUM_DESTINATIONS);
+  const [activeDest, setActiveDest] = useState<NavDestination | null>(null);
+  
+  // Pan and Zoom map states
+  const [zoom, setZoom] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+
+  // Filtered destinations list based on search query
+  const filteredDestinations = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const query = searchQuery.toLowerCase();
+    return destinations.filter(
+      (dest) =>
+        dest.name.toLowerCase().includes(query) ||
+        dest.type.toLowerCase().includes(query) ||
+        dest.details.toLowerCase().includes(query)
+    );
+  }, [searchQuery, destinations]);
+
+  // Select destination and calculate mock routing details
+  const selectDestination = useCallback((destId: string | null) => {
+    if (!destId) {
+      setActiveDest(null);
+      return;
+    }
+    const found = destinations.find((d) => d.id === destId);
+    if (found) {
+      setActiveDest(found);
+      // Reset zoom/pan when route is selected to focus map
+      setZoom(1.15);
+      setPanOffset({ x: -(found.x - 300) * 0.5, y: -(found.y - 300) * 0.5 });
+    }
+  }, [destinations]);
+
+  // Reset navigation pathing
+  const resetNavigation = useCallback(() => {
+    setActiveDest(null);
+    setSearchQuery('');
+    setZoom(1);
+    setPanOffset({ x: 0, y: 0 });
+  }, []);
+
+  // Compute live routing statistics
+  const activeRoute = useMemo<NavRoute | null>(() => {
+    if (!activeDest) return null;
+
+    // Direct distance calculation between coordinates
+    const dx = activeDest.x - USER_START.x;
+    const dy = activeDest.y - USER_START.y;
+    const distanceVal = Math.sqrt(dx * dx + dy * dy);
+
+    // Scaling factors for realistic stats (e.g. 1 unit = 0.8 meters)
+    const meters = Math.round(distanceVal * 0.85);
+    const minWalking = Math.max(1, Math.round(meters / 80)); // assume 80m per min walking speed
+
+    // Mock calculations based on coordinate ranges to feel responsive & real
+    const crowdIndex: 'Low' | 'Moderate' | 'Heavy' =
+      meters < 60 ? 'Low' : meters < 150 ? 'Moderate' : 'Heavy';
+    const isAccessible = activeDest.type !== 'exit'; // mock exits as non-accessible routes for realism
+
+    // Generating realistic curved path routing around circular stadium center (300,300)
+    // Draw line from USER_START to destination, bending around the pitch if necessary
+    let pathPoints = '';
+    
+    // If the path crosses the center pitch (300, 300), bend it around concourses
+    const crossesCenter =
+      (USER_START.x < 300 && activeDest.x > 300) || (USER_START.x > 300 && activeDest.x < 300);
+
+    if (crossesCenter) {
+      // Bend path downwards around bottom concourse curve
+      const midX = (USER_START.x + activeDest.x) / 2;
+      const midY = Math.max(USER_START.y, activeDest.y) + 40;
+      pathPoints = `M ${USER_START.x} ${USER_START.y} Q ${midX} ${midY} ${activeDest.x} ${activeDest.y}`;
+    } else {
+      // Simple bend path
+      const midX = (USER_START.x + activeDest.x) / 2 + 15;
+      const midY = (USER_START.y + activeDest.y) / 2 - 15;
+      pathPoints = `M ${USER_START.x} ${USER_START.y} Q ${midX} ${midY} ${activeDest.x} ${activeDest.y}`;
+    }
+
+    return {
+      destination: activeDest,
+      walkingTime: `${minWalking} min`,
+      distance: `${meters} meters`,
+      crowdLevel: crowdIndex,
+      accessibleRoute: isAccessible,
+      pathPoints: pathPoints,
+    };
+  }, [activeDest]);
+
+  return {
+    searchQuery,
+    setSearchQuery,
+    destinations,
+    filteredDestinations,
+    activeDest,
+    selectDestination,
+    activeRoute,
+    resetNavigation,
+    zoom,
+    setZoom,
+    panOffset,
+    setPanOffset,
+    userPosition: USER_START,
+  };
+}

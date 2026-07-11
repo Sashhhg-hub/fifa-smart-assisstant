@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Sidebar, type SidebarTab } from '../components/dashboard/Sidebar';
 import { Header } from '../components/dashboard/Header';
 import { DashboardHome } from '../components/dashboard/DashboardHome';
+import { ChatConcierge } from '../components/dashboard/ChatConcierge';
+import { StadiumNavigation } from '../components/dashboard/StadiumNavigation';
 
 export function DashboardPage() {
   const [activeTab, setActiveTab] = useState<SidebarTab>('dashboard');
@@ -12,6 +14,10 @@ export function DashboardPage() {
     switch (activeTab) {
       case 'dashboard':
         return <DashboardHome onNavigateTab={setActiveTab} />;
+      case 'concierge':
+        return <ChatConcierge />;
+      case 'navigation':
+        return <StadiumNavigation />;
       default:
         // Render a premium placeholder message for upcoming modules as they are highlighted
         return (
