@@ -13,8 +13,13 @@ export async function handleGetFoodVendors(req: Request, res: Response, next: Ne
       throw new AppError(errors?.[0] || 'Invalid request parameters', 400, 'BAD_REQUEST');
     }
 
+    if (req.query.preferences && typeof req.query.preferences === 'string') {
+      const result = await foodService.recommendFood(req.query.preferences);
+      return sendSuccess(res, result, 'Food recommendations retrieved successfully');
+    }
+
     const result = await foodService.getVendors();
-    sendSuccess(res, result, 'Food vendors list retrieved successfully');
+    return sendSuccess(res, result, 'Food vendors list retrieved successfully');
   } catch (error) {
     next(error);
   }
