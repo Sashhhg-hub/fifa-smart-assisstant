@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@google/genai": "^2.11.0",
     "@stadium-gpt/shared": "*",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
