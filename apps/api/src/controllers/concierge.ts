@@ -14,7 +14,7 @@ export async function handleConciergeChat(req: Request, res: Response, next: Nex
     }
 
     const result = await geminiService.generateReply(req.body.prompt, req.body.context);
-    sendSuccess(res, result);
+    sendSuccess(res, result, 'AI Concierge reply generated successfully');
   } catch (error) {
     next(error);
   }

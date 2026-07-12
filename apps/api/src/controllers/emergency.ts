@@ -18,7 +18,7 @@ export async function handleTriggerEmergencyAlert(req: Request, res: Response, n
       req.body.locationDetails,
       req.body.coordinates
     );
-    sendSuccess(res, result, 201);
+    sendSuccess(res, result, 'Emergency alert registered and responders dispatched', 201);
   } catch (error) {
     next(error);
   }

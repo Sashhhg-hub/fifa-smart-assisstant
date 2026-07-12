@@ -18,7 +18,7 @@ export async function handleTranslateText(req: Request, res: Response, next: Nex
       req.body.sourceLang,
       req.body.targetLang
     );
-    sendSuccess(res, { translatedText: result });
+    sendSuccess(res, { translatedText: result }, 'Text translated successfully');
   } catch (error) {
     next(error);
   }

@@ -14,7 +14,7 @@ export async function handleGetFoodVendors(req: Request, res: Response, next: Ne
     }
 
     const result = await foodService.getVendors();
-    sendSuccess(res, result);
+    sendSuccess(res, result, 'Food vendors list retrieved successfully');
   } catch (error) {
     next(error);
   }

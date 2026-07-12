@@ -9,7 +9,7 @@ const lostFoundService = new LostFoundService();
 export async function handleGetLostFoundReports(_req: Request, res: Response, next: NextFunction) {
   try {
     const result = await lostFoundService.getReports();
-    sendSuccess(res, result);
+    sendSuccess(res, result, 'Lost & Found claims list retrieved successfully');
   } catch (error) {
     next(error);
   }
@@ -23,7 +23,7 @@ export async function handleCreateLostFoundReport(req: Request, res: Response, n
     }
 
     const result = await lostFoundService.createReport(req.body);
-    sendSuccess(res, result, 201);
+    sendSuccess(res, result, 'Lost & Found report submitted successfully', 201);
   } catch (error) {
     next(error);
   }

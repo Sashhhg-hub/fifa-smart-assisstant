@@ -14,7 +14,7 @@ export async function handleGetTransitOptions(req: Request, res: Response, next:
     }
 
     const result = await transportationService.getTransitOptions();
-    sendSuccess(res, result);
+    sendSuccess(res, result, 'Transit routes and pickup locations retrieved successfully');
   } catch (error) {
     next(error);
   }

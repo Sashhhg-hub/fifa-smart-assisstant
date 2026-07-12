@@ -14,7 +14,7 @@ export async function handleGetFacilities(req: Request, res: Response, next: Nex
     }
 
     const result = await facilitiesService.getFacilities();
-    sendSuccess(res, result);
+    sendSuccess(res, result, 'Stadium facilities list retrieved successfully');
   } catch (error) {
     next(error);
   }

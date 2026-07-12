@@ -17,7 +17,7 @@ export async function handleCalculateRoute(req: Request, res: Response, next: Ne
       req.query.from as string,
       req.query.to as string
     );
-    sendSuccess(res, result);
+    sendSuccess(res, result, 'Route coordinates calculated successfully');
   } catch (error) {
     next(error);
   }

@@ -14,7 +14,7 @@ export async function handleGetAccessibilityServices(req: Request, res: Response
     }
 
     const result = await accessibilityService.getAccessibilityServices();
-    sendSuccess(res, result);
+    sendSuccess(res, result, 'Accessibility services metadata retrieved successfully');
   } catch (error) {
     next(error);
   }

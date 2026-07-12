@@ -14,7 +14,7 @@ export async function handleGetLiveMatchStats(req: Request, res: Response, next:
     }
 
     const result = await matchService.getLiveMatchStats();
-    sendSuccess(res, result);
+    sendSuccess(res, result, 'Live match statistics retrieved successfully');
   } catch (error) {
     next(error);
   }
