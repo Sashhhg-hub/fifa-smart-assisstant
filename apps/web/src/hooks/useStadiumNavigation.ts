@@ -29,6 +29,20 @@ export const MOCK_STADIUM_DESTINATIONS: NavDestination[] = [
   { id: 'medical-firstaid', name: 'First Aid Clinic (Sec 118)', type: 'medical', x: 210, y: 430, details: 'Doctor & Nurse on duty' },
   { id: 'exit-north', name: 'Emergency Exit North', type: 'exit', x: 300, y: 110, details: 'North Evacuation Tunnel' },
   { id: 'exit-south', name: 'Emergency Exit South', type: 'exit', x: 300, y: 490, details: 'South Evacuation Tunnel' },
+  { id: 'facility-washroom-1', name: 'Level 1 North Washrooms', type: 'washroom', x: 250, y: 460, details: 'Sec 114 Concourse' },
+  { id: 'facility-washroom-2', name: 'Level 2 South Washrooms', type: 'washroom', x: 300, y: 120, details: 'Sec 142 Concourse' },
+  { id: 'facility-washroom-accessible-1', name: 'Level 1 North Accessible Washrooms', type: 'washroom', x: 250, y: 465, details: 'Sec 114 Concourse (Accessible)' },
+  { id: 'facility-atm-1', name: 'Chase ATM Section 112', type: 'facility', x: 280, y: 480, details: 'ATM - Sec 112 Concourse' },
+  { id: 'facility-atm-2', name: 'Capital One ATM Gate D', type: 'facility', x: 180, y: 220, details: 'ATM - Gate D Plaza' },
+  { id: 'facility-water-1', name: 'Hydration Station Sec 122', type: 'facility', x: 380, y: 430, details: 'Water Station - Sec 122' },
+  { id: 'facility-charging-1', name: 'Charging Zone Sec 108', type: 'facility', x: 420, y: 350, details: 'Charging Bar - Sec 108' },
+  { id: 'facility-info-1', name: 'Guest Information Desk Gate A', type: 'facility', x: 210, y: 350, details: 'Info Desk - Gate A' },
+  { id: 'facility-medical-1', name: 'First Aid Clinic (Sec 118)', type: 'medical', x: 210, y: 430, details: 'Medical - Section 118' },
+  { id: 'facility-prayer-1', name: 'Interfaith Prayer Room Sec 132', type: 'facility', x: 390, y: 260, details: 'Prayer Room - Sec 132' },
+  { id: 'facility-store-1', name: 'FIFA Official Store Gate C', type: 'facility', x: 350, y: 450, details: 'Merch Store - Gate C' },
+  { id: 'facility-baby-1', name: 'Baby Care Room Sec 140', type: 'facility', x: 280, y: 140, details: 'Baby Care - Sec 140' },
+  { id: 'facility-smoking-1', name: 'Smoking Zone Patio B', type: 'facility', x: 410, y: 400, details: 'Smoking Area - Patio B' },
+  { id: 'facility-lost-found', name: 'Lost & Found Section 124', type: 'facility', x: 320, y: 460, details: 'Lost & Found - Sec 124' },
 ];
 
 export function useStadiumNavigation() {

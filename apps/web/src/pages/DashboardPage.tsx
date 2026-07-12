@@ -9,10 +9,13 @@ import { FoodFinder } from '../components/dashboard/FoodFinder';
 import { EmergencyAssistance } from '../components/dashboard/EmergencyAssistance';
 import { AccessibilitySupport } from '../components/dashboard/AccessibilitySupport';
 import { LiveTranslation } from '../components/dashboard/LiveTranslation';
+import { FacilityFinder } from '../components/dashboard/FacilityFinder';
+import { LostAndFound } from '../components/dashboard/LostAndFound';
 
 export function DashboardPage() {
   const [activeTab, setActiveTab] = useState<SidebarTab>('dashboard');
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [selectedNavDestinationId, setSelectedNavDestinationId] = useState<string | null>(null);
 
   // Helper to render the active panel content
   const renderContent = () => {
@@ -22,11 +25,25 @@ export function DashboardPage() {
       case 'concierge':
         return <ChatConcierge />;
       case 'navigation':
-        return <StadiumNavigation />;
+        return (
+          <StadiumNavigation 
+            initialDestinationId={selectedNavDestinationId} 
+            clearInitialDestination={() => setSelectedNavDestinationId(null)} 
+          />
+        );
       case 'match':
         return <MatchHub />;
       case 'food':
         return <FoodFinder onNavigateTab={setActiveTab} />;
+      case 'facilities':
+        return (
+          <FacilityFinder 
+            onNavigateTab={setActiveTab} 
+            onSelectDestination={setSelectedNavDestinationId} 
+          />
+        );
+      case 'lostfound':
+        return <LostAndFound />;
       case 'emergency':
         return <EmergencyAssistance />;
       case 'accessibility':

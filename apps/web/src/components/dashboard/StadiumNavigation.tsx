@@ -1,7 +1,13 @@
+import { useEffect } from 'react';
 import { useStadiumNavigation } from '../../hooks/useStadiumNavigation';
 import { StadiumMap } from './StadiumMap';
 
-export function StadiumNavigation() {
+interface StadiumNavigationProps {
+  initialDestinationId?: string | null;
+  clearInitialDestination?: () => void;
+}
+
+export function StadiumNavigation({ initialDestinationId, clearInitialDestination }: StadiumNavigationProps) {
   const {
     searchQuery,
     setSearchQuery,
@@ -17,6 +23,15 @@ export function StadiumNavigation() {
     setPanOffset,
     userPosition,
   } = useStadiumNavigation();
+
+  useEffect(() => {
+    if (initialDestinationId) {
+      selectDestination(initialDestinationId);
+      if (clearInitialDestination) {
+        clearInitialDestination();
+      }
+    }
+  }, [initialDestinationId, selectDestination, clearInitialDestination]);
 
   const quickActions = [
     { label: 'Find My Seat', id: 'seat-114', emoji: '🎫', desc: 'Sec 114 Portal' },
