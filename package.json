@@ -10,6 +10,7 @@
   "scripts": {
     "dev:web": "npm run dev -w @stadium-gpt/web",
     "dev:api": "npm run dev -w @stadium-gpt/api",
+    "seed": "npm run seed -w @stadium-gpt/api",
     "build": "npm run build -ws --if-present",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
