@@ -1,13 +1,54 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { MOCK_RESTAURANTS, type Restaurant } from '../constants/foodData';
+import { apiClient } from '../utils/apiClient';
+
+interface BackendVendor {
+  id: string;
+  vendorId?: string;
+  name: string;
+  crowdLevel?: string;
+  estimatedWaitTime?: number;
+}
 
 export function useFoodFinder() {
+  const [restaurants, setRestaurants] = useState<Restaurant[]>(MOCK_RESTAURANTS);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
-  const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(MOCK_RESTAURANTS[0]?.id || null);
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(
+    MOCK_RESTAURANTS[0]?.id || null
+  );
 
-  // Toggle filter selections
+  useEffect(() => {
+    async function loadLiveTimes() {
+      try {
+        const response = await apiClient.get<BackendVendor[]>('/food/vendors');
+        if (response.success && response.data) {
+          const apiData = response.data;
+          setRestaurants((prev) =>
+            prev.map((rest) => {
+              const match = apiData.find(
+                (v) =>
+                  v.id === rest.id || v.vendorId === rest.id || v.name.includes(rest.name)
+              );
+              if (match) {
+                return {
+                  ...rest,
+                  queueTime: match.estimatedWaitTime ?? rest.queueTime,
+                  crowdStatus: (match.crowdLevel as Restaurant['crowdStatus']) || rest.crowdStatus,
+                };
+              }
+              return rest;
+            })
+          );
+        }
+      } catch (err) {
+        console.warn('[Food Finder Hook] Failed to load live vendor statistics:', err);
+      }
+    }
+    loadLiveTimes();
+  }, []);
+
   const toggleFilter = (filter: string) => {
     setActiveFilters((prev) =>
       prev.includes(filter) ? prev.filter((f) => f !== filter) : [...prev, filter]
@@ -16,7 +57,7 @@ export function useFoodFinder() {
 
   // 1. FILTERING LOGIC
   const filteredRestaurants = useMemo(() => {
-    return MOCK_RESTAURANTS.filter((rest) => {
+    return restaurants.filter((rest) => {
       // Search query check
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
@@ -32,7 +73,6 @@ export function useFoodFinder() {
 
       // Category chip check
       if (activeCategory) {
-        // Special mapping for 'Vegetarian' category since it maps to the boolean flag
         if (activeCategory === 'Vegetarian') {
           if (!rest.isVegetarian) return false;
         } else {
@@ -55,19 +95,18 @@ export function useFoodFinder() {
 
       return true;
     });
-  }, [searchQuery, activeCategory, activeFilters]);
+  }, [restaurants, searchQuery, activeCategory, activeFilters]);
 
-  // 2. RECOMMENDATION SCORING LOGIC (Isolated here inside useFoodFinder)
+  // 2. RECOMMENDATION SCORING LOGIC
   const smartRecommendation = useMemo<Restaurant | null>(() => {
-    if (MOCK_RESTAURANTS.length === 0) return null;
+    if (restaurants.length === 0) return null;
 
     let bestScore = -Infinity;
     let bestRest: Restaurant | null = null;
 
-    MOCK_RESTAURANTS.forEach((rest) => {
+    restaurants.forEach((rest) => {
       if (!rest.isOpen) return;
 
-      // Score formula weighting higher ratings, shorter queues, shorter walking time, closer distance
       const ratingWeight = rest.rating * 15;
       const timePenalty = (rest.queueTime + rest.walkingTime) * 1.5;
       const distancePenalty = rest.distance * 0.03;
@@ -81,12 +120,12 @@ export function useFoodFinder() {
     });
 
     return bestRest;
-  }, []);
+  }, [restaurants]);
 
   // Selected Restaurant details resolver
   const selectedRestaurant = useMemo(() => {
-    return MOCK_RESTAURANTS.find((r) => r.id === selectedRestaurantId) || null;
-  }, [selectedRestaurantId]);
+    return restaurants.find((r) => r.id === selectedRestaurantId) || null;
+  }, [restaurants, selectedRestaurantId]);
 
   return {
     searchQuery,
@@ -100,6 +139,6 @@ export function useFoodFinder() {
     selectedRestaurant,
     filteredRestaurants,
     smartRecommendation,
-    restaurants: MOCK_RESTAURANTS,
+    restaurants,
   };
 }

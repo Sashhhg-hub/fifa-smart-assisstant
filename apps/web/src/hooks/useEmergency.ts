@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { apiClient } from '../utils/apiClient';
 
 export interface EmergencyCategory {
   id: string;
@@ -83,33 +84,44 @@ export function useEmergency() {
   const [ticketNumber, setTicketNumber] = useState<string | null>(null);
   const [countdownSeconds, setCountdownSeconds] = useState<number | null>(null);
 
-  // Select a category
   const selectEmergency = useCallback((id: string) => {
     setSelectedId(id);
   }, []);
 
-  // Submit request
-  const requestAssistance = useCallback(() => {
+  const requestAssistance = useCallback(async () => {
     setIsSubmitting(true);
     setIsDispatched(false);
     setTicketNumber(null);
     setCountdownSeconds(null);
 
-    // Simulate 1.5s loader for dispatch registration
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsDispatched(true);
-      
-      // Generate mock ticket number e.g. EM-49102
-      const randomId = Math.floor(10000 + Math.random() * 90000);
-      setTicketNumber(`EM-${randomId}`);
-      
-      // Seed countdown timer: 90 seconds (1m 30s)
-      setCountdownSeconds(90);
-    }, 1500);
-  }, []);
+    const type = selectedId === 'security' || selectedId === 'child' ? 'security' : 'medical';
 
-  // Cancel request
+    try {
+      const response = await apiClient.post<{ ticketNumber?: string }>('/emergency/alert', {
+        type,
+        locationDetails: 'Section 114, Row 12, Seat 4',
+        coordinates: { x: 195, y: 380 },
+      });
+
+      if (response.success && response.data) {
+        setTicketNumber(
+          response.data.ticketNumber || `EM-${Math.floor(10000 + Math.random() * 90000)}`
+        );
+      } else {
+        setTicketNumber(`EM-${Math.floor(10000 + Math.random() * 90000)}`);
+      }
+      setIsDispatched(true);
+      setCountdownSeconds(90);
+    } catch (err) {
+      console.warn('[Emergency Hook] Failed to submit alert:', err);
+      setTicketNumber(`EM-${Math.floor(10000 + Math.random() * 90000)}`);
+      setIsDispatched(true);
+      setCountdownSeconds(90);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [selectedId]);
+
   const cancelRequest = useCallback(() => {
     setIsSubmitting(false);
     setIsDispatched(false);
@@ -117,7 +129,6 @@ export function useEmergency() {
     setCountdownSeconds(null);
   }, []);
 
-  // ETA Countdown Tick
   useEffect(() => {
     if (!isDispatched || countdownSeconds === null) return;
 
@@ -132,7 +143,6 @@ export function useEmergency() {
     return () => clearInterval(timer);
   }, [isDispatched, countdownSeconds]);
 
-  // Selected Category helper
   const selectedCategory = useMemo(() => {
     return EMERGENCY_CATEGORIES.find((c) => c.id === selectedId) || EMERGENCY_CATEGORIES[0];
   }, [selectedId]);

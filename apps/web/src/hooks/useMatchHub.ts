@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { apiClient } from '../utils/apiClient';
 
 export interface Team {
   id: string;
@@ -18,8 +19,8 @@ export interface MatchEvent {
 }
 
 export interface MatchStats {
-  possession: number; // Percentage for team 1 (e.g. 54 means ARG: 54%, FRA: 46%)
-  shots: [number, number]; // [ARG, FRA]
+  possession: number;
+  shots: [number, number];
   shotsOnTarget: [number, number];
   corners: [number, number];
   fouls: [number, number];
@@ -54,10 +55,6 @@ export interface PlayerProfile {
   keyPasses: number;
   dribbles: number;
 }
-
-// ----------------------------------------------------
-// Mock Constants (Easily swappable with API endpoints)
-// ----------------------------------------------------
 
 export const MOCK_TEAM_1: Team = {
   id: 'arg',
@@ -100,34 +97,10 @@ export const MOCK_TIMELINE_EVENTS: MatchEvent[] = [
     teamId: 'arg',
     details: 'Clinical finish under Lloris after a beautiful assist by Messi.',
   },
-  {
-    id: 'e4',
-    time: 58,
-    type: 'substitution',
-    player: 'Ousmane Dembélé (Out) / Kingsley Coman (In)',
-    teamId: 'fra',
-    details: 'Tactical switch looking for pace on the wings.',
-  },
-  {
-    id: 'e5',
-    time: 63,
-    type: 'var',
-    player: 'VAR Penalty Review',
-    teamId: 'fra',
-    details: 'Review complete: No handball in the box. Decision stands.',
-  },
-  {
-    id: 'e6',
-    time: 65,
-    type: 'yellow_card',
-    player: 'Cristian Romero',
-    teamId: 'arg',
-    details: 'Late slide tackle challenge on Mbappé.',
-  },
 ];
 
 export const MOCK_STATS: MatchStats = {
-  possession: 54, // ARG: 54%, FRA: 46%
+  possession: 54,
   shots: [14, 11],
   shotsOnTarget: [6, 4],
   corners: [5, 4],
@@ -159,20 +132,6 @@ export const MOCK_UPCOMING_EVENTS: UpcomingEvent[] = [
     description: 'Last chance to cast your vote for Match MVP in the Concierge.',
     icon: '🏆',
   },
-  {
-    id: 'up3',
-    time: '90+5\'',
-    title: 'Match MVP Ceremony',
-    description: 'Official presentation of the Player of the Match trophy.',
-    icon: '🎖️',
-  },
-  {
-    id: 'up4',
-    time: 'Tomorrow',
-    title: 'Next Quarterfinal',
-    description: 'Brazil vs England — Live from MetLife Stadium at 8:00 PM.',
-    icon: '⚽',
-  },
 ];
 
 export const MOCK_PLAYER_SPOTLIGHT: PlayerProfile = {
@@ -187,16 +146,47 @@ export const MOCK_PLAYER_SPOTLIGHT: PlayerProfile = {
   dribbles: 5,
 };
 
-// ----------------------------------------------------
-// useMatchHub Hook Hook implementation
-// ----------------------------------------------------
+interface BackendMatch {
+  minute?: number;
+  homeTeam?: string;
+  awayTeam?: string;
+  timeline?: { time: string; event: string; detail: string }[];
+}
 
 export function useMatchHub() {
   const [matchMinutes, setMatchMinutes] = useState(67);
   const [isLive, setIsLive] = useState(true);
+  const [team1, setTeam1] = useState<Team>(MOCK_TEAM_1);
+  const [team2, setTeam2] = useState<Team>(MOCK_TEAM_2);
+  const [timelineEvents, setTimelineEvents] = useState<MatchEvent[]>(MOCK_TIMELINE_EVENTS);
 
   useEffect(() => {
-    // Dynamic Match Minutes simulator: increment time every 60 seconds
+    async function loadLive() {
+      try {
+        const response = await apiClient.get<BackendMatch>('/match/live');
+        if (response.success && response.data) {
+          const d = response.data;
+          setMatchMinutes(d.minute ?? 74);
+          setTeam1((prev) => ({ ...prev, name: d.homeTeam || prev.name }));
+          setTeam2((prev) => ({ ...prev, name: d.awayTeam || prev.name }));
+          if (d.timeline) {
+            const events: MatchEvent[] = d.timeline.map((evt, idx) => ({
+              id: `evt-${idx}`,
+              time: parseInt(evt.time) || 0,
+              type: evt.event.toLowerCase().includes('card') ? 'yellow_card' : 'goal',
+              player: evt.detail,
+              teamId: evt.detail.includes('(US)') ? 'arg' : 'fra',
+              details: evt.detail,
+            }));
+            setTimelineEvents(events);
+          }
+        }
+      } catch (err) {
+        console.warn('[Match Hub Hook] Failed to load live stats:', err);
+      }
+    }
+    loadLive();
+
     const interval = setInterval(() => {
       setMatchMinutes((prev) => {
         if (prev >= 90) {
@@ -214,9 +204,9 @@ export function useMatchHub() {
   return {
     matchMinutes,
     isLive,
-    team1: MOCK_TEAM_1,
-    team2: MOCK_TEAM_2,
-    timelineEvents: MOCK_TIMELINE_EVENTS,
+    team1,
+    team2,
+    timelineEvents,
     stats: MOCK_STATS,
     stadiumInfo: MOCK_STADIUM_INFO,
     upcomingEvents: MOCK_UPCOMING_EVENTS,

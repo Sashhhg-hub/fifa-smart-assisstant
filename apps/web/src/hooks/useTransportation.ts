@@ -1,16 +1,57 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { MOCK_TRANSPORT_OPTIONS, type TransportOption } from '../constants/transportationData';
+import { apiClient } from '../utils/apiClient';
+
+interface BackendTransport {
+  name: string;
+  type: string;
+  isOpen?: boolean;
+  crowdLevel?: string;
+  travelTime?: number;
+}
 
 export function useTransportation() {
+  const [options, setOptions] = useState<TransportOption[]>(MOCK_TRANSPORT_OPTIONS);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(
-    MOCK_TRANSPORT_OPTIONS.find(o => o.isOpen)?.id || MOCK_TRANSPORT_OPTIONS[0]?.id || null
+    MOCK_TRANSPORT_OPTIONS.find((o) => o.isOpen)?.id || MOCK_TRANSPORT_OPTIONS[0]?.id || null
   );
+
+  useEffect(() => {
+    async function loadLiveOptions() {
+      try {
+        const response = await apiClient.get<BackendTransport[]>('/transportation/options');
+        if (response.success && response.data) {
+          const apiData = response.data;
+          setOptions((prev) =>
+            prev.map((o) => {
+              const match = apiData.find(
+                (bo) =>
+                  bo.name.includes(o.name) || bo.type.toLowerCase() === o.type.toLowerCase()
+              );
+              if (match) {
+                return {
+                  ...o,
+                  isOpen: match.isOpen ?? o.isOpen,
+                  crowdLevel: (match.crowdLevel as TransportOption['crowdLevel']) || o.crowdLevel,
+                  travelTime: match.travelTime || o.travelTime,
+                };
+              }
+              return o;
+            })
+          );
+        }
+      } catch (err) {
+        console.warn('[Transportation Hook] Failed to load transit options:', err);
+      }
+    }
+    loadLiveOptions();
+  }, []);
 
   // 1. FILTERING LOGIC
   const filteredOptions = useMemo(() => {
-    return MOCK_TRANSPORT_OPTIONS.filter((opt) => {
+    return options.filter((opt) => {
       // Search query check
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
@@ -30,16 +71,11 @@ export function useTransportation() {
 
       return true;
     });
-  }, [searchQuery, activeCategory]);
+  }, [options, searchQuery, activeCategory]);
 
-  // 2. SMART RECOMMENDATION LOGIC (Best Travel Option)
-  // Scores available options based on:
-  // - Open status (must be open)
-  // - Shortest travel time (lower penalty)
-  // - Lowest cost (lower penalty)
-  // - Lowest crowd density (Low = 0, Moderate = 10, Heavy = 25)
+  // 2. SMART RECOMMENDATION LOGIC
   const smartRecommendation = useMemo<TransportOption | null>(() => {
-    const openOptions = MOCK_TRANSPORT_OPTIONS.filter((opt) => opt.isOpen);
+    const openOptions = options.filter((opt) => opt.isOpen);
     if (openOptions.length === 0) return null;
 
     let bestScore = -Infinity;
@@ -65,12 +101,12 @@ export function useTransportation() {
     });
 
     return bestOption;
-  }, []);
+  }, [options]);
 
   // Selected Transport Option resolver
   const selectedOption = useMemo(() => {
-    return MOCK_TRANSPORT_OPTIONS.find((opt) => opt.id === selectedOptionId) || null;
-  }, [selectedOptionId]);
+    return options.find((opt) => opt.id === selectedOptionId) || null;
+  }, [options, selectedOptionId]);
 
   return {
     searchQuery,
@@ -82,6 +118,6 @@ export function useTransportation() {
     selectedOption,
     filteredOptions,
     smartRecommendation,
-    options: MOCK_TRANSPORT_OPTIONS,
+    options,
   };
 }

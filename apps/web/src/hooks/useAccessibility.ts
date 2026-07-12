@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { apiClient } from '../utils/apiClient';
 
 export interface AccessibilityService {
   id: string;
@@ -118,12 +119,37 @@ export const MOCK_HELPERS: SupportHelper[] = [
 ];
 
 export function useAccessibility() {
+  const [services, setServices] = useState<AccessibilityService[]>(ACCESSIBILITY_SERVICES);
   const [selectedId, setSelectedId] = useState<string>('wheelchair');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isBooked, setIsBooked] = useState<boolean>(false);
   const [requestId, setRequestId] = useState<string | null>(null);
   const [countdownSeconds, setCountdownSeconds] = useState<number | null>(null);
   const [assignedHelper, setAssignedHelper] = useState<SupportHelper | null>(null);
+
+  useEffect(() => {
+    async function loadServices() {
+      try {
+        const response = await apiClient.get<{ status: string; provisions: string[] }>(
+          '/accessibility/services'
+        );
+        if (response.success && response.data) {
+          const provisions = response.data.provisions || [];
+          if (provisions.length > 0) {
+            setServices((prev) =>
+              prev.map((s) => ({
+                ...s,
+                status: provisions.includes(s.id) ? 'Fully Operational' : s.status,
+              }))
+            );
+          }
+        }
+      } catch (err) {
+        console.warn('[Accessibility Hook] Failed to load services:', err);
+      }
+    }
+    loadServices();
+  }, []);
 
   const selectService = useCallback((id: string) => {
     setSelectedId(id);
@@ -136,20 +162,15 @@ export function useAccessibility() {
     setCountdownSeconds(null);
     setAssignedHelper(null);
 
-    // Simulate 1.5s helper dispatch registration
     setTimeout(() => {
       setIsSubmitting(false);
       setIsBooked(true);
-      
-      // Select random helper
+
       const randomIdx = Math.floor(Math.random() * MOCK_HELPERS.length);
       setAssignedHelper(MOCK_HELPERS[randomIdx]);
-      
-      // Generate ID
+
       const randomNum = Math.floor(1000 + Math.random() * 9000);
       setRequestId(`AC-${randomNum}`);
-      
-      // Set countdown: 180 seconds (3 minutes)
       setCountdownSeconds(180);
     }, 1500);
   }, []);
@@ -162,7 +183,6 @@ export function useAccessibility() {
     setAssignedHelper(null);
   }, []);
 
-  // ETA Countdown Ticker
   useEffect(() => {
     if (!isBooked || countdownSeconds === null) return;
 
@@ -177,13 +197,12 @@ export function useAccessibility() {
     return () => clearInterval(timer);
   }, [isBooked, countdownSeconds]);
 
-  // Selected Service resolver
   const selectedService = useMemo(() => {
-    return ACCESSIBILITY_SERVICES.find((s) => s.id === selectedId) || ACCESSIBILITY_SERVICES[0];
-  }, [selectedId]);
+    return services.find((s) => s.id === selectedId) || services[0];
+  }, [services, selectedId]);
 
   return {
-    services: ACCESSIBILITY_SERVICES,
+    services,
     selectedId,
     selectedService,
     selectService,

@@ -1,5 +1,22 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { MOCK_LOST_FOUND_ITEMS, type LostFoundItem } from '../constants/lostFoundData';
+import { apiClient } from '../utils/apiClient';
+
+interface BackendLostFound {
+  _id?: string;
+  claimId: string;
+  name: string;
+  category: string;
+  type: string;
+  description: string;
+  contactInfo: string;
+  status: string;
+  createdAt?: string;
+  collectionLocation?: string;
+  claimInstructions?: string;
+  matchedReportId?: string;
+  matchConfidence?: number;
+}
 
 export function useLostAndFound() {
   const [items, setItems] = useState<LostFoundItem[]>(MOCK_LOST_FOUND_ITEMS);
@@ -10,7 +27,37 @@ export function useLostAndFound() {
     MOCK_LOST_FOUND_ITEMS[0]?.id || null
   );
 
-  // 1. REPORT SUBMISSION
+  useEffect(() => {
+    async function loadReports() {
+      try {
+        const response = await apiClient.get<BackendLostFound[]>('/lostfound');
+        if (response.success && response.data) {
+          const apiData = response.data;
+          const mapped: LostFoundItem[] = apiData.map((item) => ({
+            id: item._id || item.claimId || `lf-item-${Date.now()}`,
+            name: item.name,
+            category: item.category,
+            type: item.type as 'lost' | 'found',
+            description: item.description,
+            contactInfo: item.contactInfo,
+            status: item.status as LostFoundItem['status'],
+            claimId: item.claimId,
+            dateReported: item.createdAt || new Date().toISOString(),
+            collectionLocation: item.collectionLocation || 'Main Help Desk (Section 102)',
+            claimInstructions: item.claimInstructions || 'Please verify ownership with ID at pickup location.',
+          }));
+          setItems(mapped);
+          if (mapped.length > 0) {
+            setSelectedItemId(mapped[0].id);
+          }
+        }
+      } catch (err) {
+        console.warn('[Lost & Found Hook] Failed to load reports:', err);
+      }
+    }
+    loadReports();
+  }, []);
+
   const addReport = (reportData: {
     name: string;
     category: string;
@@ -21,22 +68,57 @@ export function useLostAndFound() {
     claimInstructions: string;
   }) => {
     const claimId = `CLM-${Math.floor(100000 + Math.random() * 900000)}`;
+    const mockId = `lf-item-${Date.now()}`;
     const newItem: LostFoundItem = {
       ...reportData,
-      id: `lf-item-${Date.now()}`,
+      id: mockId,
       dateReported: new Date().toISOString(),
       status: 'Reported',
       claimId,
     };
+
     setItems((prev) => [newItem, ...prev]);
     setSelectedItemId(newItem.id);
+
+    apiClient
+      .post<BackendLostFound>('/lostfound/report', {
+        name: reportData.name,
+        category: reportData.category,
+        description: reportData.description,
+        type: reportData.type,
+        contactInfo: reportData.contactInfo,
+        collectionLocation: reportData.collectionLocation,
+        claimInstructions: reportData.claimInstructions,
+      })
+      .then((response) => {
+        if (response.success && response.data) {
+          const item = response.data;
+          setItems((prev) =>
+            prev.map((i) =>
+              i.id === mockId
+                ? {
+                    ...i,
+                    id: item._id || item.claimId,
+                    status: (item.status as LostFoundItem['status']) || i.status,
+                    claimId: item.claimId || i.claimId,
+                    matchedReportId: item.matchedReportId,
+                    matchConfidence: item.matchConfidence,
+                  }
+                : i
+            )
+          );
+          setSelectedItemId(item._id || item.claimId);
+        }
+      })
+      .catch((err) => {
+        console.error('[Lost & Found Hook] Background matching failed:', err);
+      });
+
     return claimId;
   };
 
-  // 2. FILTERING LOGIC
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
-      // Search query check
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         const matchesName = item.name.toLowerCase().includes(query);
@@ -45,14 +127,12 @@ export function useLostAndFound() {
         if (!matchesName && !matchesDesc && !matchesClaim) return false;
       }
 
-      // Category filter check
       if (activeCategory) {
         if (item.category.toLowerCase() !== activeCategory.toLowerCase()) {
           return false;
         }
       }
 
-      // Status filter check
       if (activeStatus) {
         if (item.status.toLowerCase() !== activeStatus.toLowerCase()) {
           return false;
@@ -63,13 +143,10 @@ export function useLostAndFound() {
     });
   }, [items, searchQuery, activeCategory, activeStatus]);
 
-  // Selected item resolver
   const selectedItem = useMemo(() => {
     return items.find((i) => i.id === selectedItemId) || null;
   }, [items, selectedItemId]);
 
-  // 3. SMART MATCH RECOMMENDATION LOGIC (Possible Match Found)
-  // For the selected item, find the most likely match of the opposite type (lost <=> found)
   const possibleMatch = useMemo<LostFoundItem | null>(() => {
     if (!selectedItem) return null;
 
@@ -82,21 +159,25 @@ export function useLostAndFound() {
     candidates.forEach((candidate) => {
       let score = 0;
 
-      // Rule 1: Category Match (+50 points)
       if (candidate.category.toLowerCase() === selectedItem.category.toLowerCase()) {
         score += 50;
       }
 
-      // Rule 2: Description keyword similarity (+5 points per match)
-      const desc1Words = selectedItem.description.toLowerCase().replace(/[^a-zA-Z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 3);
-      const desc2Words = candidate.description.toLowerCase().replace(/[^a-zA-Z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 3);
-      const commonWords = desc1Words.filter(w => desc2Words.includes(w));
-      
-      // Deduplicate common words
+      const desc1Words = selectedItem.description
+        .toLowerCase()
+        .replace(/[^a-zA-Z0-9\s]/g, '')
+        .split(/\s+/)
+        .filter((w) => w.length > 3);
+      const desc2Words = candidate.description
+        .toLowerCase()
+        .replace(/[^a-zA-Z0-9\s]/g, '')
+        .split(/\s+/)
+        .filter((w) => w.length > 3);
+      const commonWords = desc1Words.filter((w) => desc2Words.includes(w));
+
       const uniqueCommonWords = Array.from(new Set(commonWords));
       score += uniqueCommonWords.length * 8;
 
-      // Rule 3: Report Timing Proximity
       const date1 = new Date(selectedItem.dateReported).getTime();
       const date2 = new Date(candidate.dateReported).getTime();
       const hoursDiff = Math.abs(date1 - date2) / (1000 * 60 * 60);
@@ -109,7 +190,6 @@ export function useLostAndFound() {
         score += 5;
       }
 
-      // We only consider it a match if it crosses a baseline threshold of similarity (e.g. 60 points)
       if (score >= 60 && score > bestScore) {
         bestScore = score;
         bestMatch = candidate;
