@@ -7,6 +7,7 @@ export type SidebarTab =
   | 'food'
   | 'facilities'
   | 'lostfound'
+  | 'transportation'
   | 'match'
   | 'emergency'
   | 'translation'
@@ -113,6 +114,15 @@ export function Sidebar({ activeTab, setActiveTab, isCollapsed, setIsCollapsed }
       icon: (
         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 0 1-2.243 2.118H6.618a2.25 2.25 0 0 1-2.243-2.118L3.75 7.5m16.5 0a2.25 2.25 0 0 0-2.25-2.25h-1.5a3 3 0 0 0-6 0h-1.5A2.25 2.25 0 0 0 3.75 7.5m16.5 0V4.75A2.25 2.25 0 0 0 18 2.5H6A2.25 2.25 0 0 0 3.75 4.75V7.5" />
+        </svg>
+      ),
+    },
+    {
+      id: 'transportation',
+      label: 'Transportation',
+      icon: (
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 6a3 3 0 0 0-3-3H6.75a3 3 0 0 0-3 3v10.5a3 3 0 0 0 3 3h6.75a3 3 0 0 0 3-3V6Z M3.75 16.5h12 M12 19.5v-3 M6 19.5v-3" />
         </svg>
       ),
     },

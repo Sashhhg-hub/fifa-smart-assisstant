@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 export interface StadiumMapDestination {
   id: string;
   name: string;
-  type: 'seat' | 'gate' | 'food' | 'washroom' | 'exit' | 'medical' | 'facility';
+  type: 'seat' | 'gate' | 'food' | 'washroom' | 'exit' | 'medical' | 'facility' | 'transport';
   x: number; // Map SVG X-coordinate (0-600 scale)
   y: number; // Map SVG Y-coordinate (0-600 scale)
   details: string;
@@ -85,6 +85,8 @@ export function StadiumMap({
         return { color: '#f97316', emoji: '🚨' }; // Orange
       case 'facility':
         return { color: '#10b981', emoji: '📍' }; // Emerald/Green
+      case 'transport':
+        return { color: '#6366f1', emoji: '🚌' }; // Indigo
     }
   };
 

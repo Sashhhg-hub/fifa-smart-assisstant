@@ -43,6 +43,14 @@ export const MOCK_STADIUM_DESTINATIONS: NavDestination[] = [
   { id: 'facility-baby-1', name: 'Baby Care Room Sec 140', type: 'facility', x: 280, y: 140, details: 'Baby Care - Sec 140' },
   { id: 'facility-smoking-1', name: 'Smoking Zone Patio B', type: 'facility', x: 410, y: 400, details: 'Smoking Area - Patio B' },
   { id: 'facility-lost-found', name: 'Lost & Found Section 124', type: 'facility', x: 320, y: 460, details: 'Lost & Found - Sec 124' },
+  { id: 'pickup-metro', name: 'Metro Station Pick-up', type: 'transport', x: 120, y: 150, details: 'Metro - West Loop' },
+  { id: 'pickup-shuttle', name: 'FIFA Shuttle Pick-up', type: 'transport', x: 480, y: 150, details: 'Shuttle - East Plaza' },
+  { id: 'pickup-bus', name: 'NJ Transit Bus Stand', type: 'transport', x: 110, y: 420, details: 'Bus - South-West Loop' },
+  { id: 'pickup-taxi', name: 'MetLife Taxi Stand', type: 'transport', x: 480, y: 420, details: 'Taxi - South-East Plaza' },
+  { id: 'pickup-uber', name: 'Uber Pick-up Zone', type: 'transport', x: 300, y: 540, details: 'Rideshare Zone A' },
+  { id: 'pickup-cycling', name: 'Bicycle Lockup Racks', type: 'transport', x: 180, y: 490, details: 'West Gate Racks' },
+  { id: 'pickup-parking', name: 'Stadium Parking Lot E', type: 'transport', x: 300, y: 70, details: 'North Lot E' },
+  { id: 'pickup-rideshare', name: 'Rideshare Drop Zone B', type: 'transport', x: 300, y: 530, details: 'Rideshare Zone B' },
 ];
 
 export function useStadiumNavigation() {

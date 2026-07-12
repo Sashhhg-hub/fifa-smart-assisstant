@@ -11,6 +11,7 @@ import { AccessibilitySupport } from '../components/dashboard/AccessibilitySuppo
 import { LiveTranslation } from '../components/dashboard/LiveTranslation';
 import { FacilityFinder } from '../components/dashboard/FacilityFinder';
 import { LostAndFound } from '../components/dashboard/LostAndFound';
+import { Transportation } from '../components/dashboard/Transportation';
 
 export function DashboardPage() {
   const [activeTab, setActiveTab] = useState<SidebarTab>('dashboard');
@@ -44,6 +45,13 @@ export function DashboardPage() {
         );
       case 'lostfound':
         return <LostAndFound />;
+      case 'transportation':
+        return (
+          <Transportation 
+            onNavigateTab={setActiveTab} 
+            onSelectDestination={setSelectedNavDestinationId} 
+          />
+        );
       case 'emergency':
         return <EmergencyAssistance />;
       case 'accessibility':
