@@ -1,5 +1,11 @@
-const BASE_URL = (import.meta.env.VITE_API_URL as string) || 'http://localhost:3001/api/v1';
-const TIMEOUT_MS = 10000;
+const BASE_URL = (() => {
+  const envUrl = import.meta.env.VITE_API_URL as string;
+  if (!envUrl) {
+    return 'http://localhost:3001/api/v1';
+  }
+  return envUrl.endsWith('/api/v1') ? envUrl : `${envUrl.replace(/\/$/, '')}/api/v1`;
+})();
+const TIMEOUT_MS = 30000;
 
 export interface ApiResponse<T = unknown> {
   success: boolean;

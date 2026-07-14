@@ -5,7 +5,7 @@ import * as prompts from './prompts.js';
 
 export class GeminiService {
   private ai: GoogleGenAI | null = null;
-  private modelName = 'gemini-2.5-flash';
+  private modelName = 'gemini-flash-latest';
 
   constructor() {
     if (env.GEMINI_API_KEY) {
